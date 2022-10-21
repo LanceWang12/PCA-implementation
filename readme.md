@@ -1,6 +1,6 @@
 # t-SNE implementation
 
-[toc]
+This is a homework project for [Numerical Software Development(NYCU 2022 autumn)](https://yyc.solvcon.net/en/latest/nsd/schedule/22au_nycu/schedule.html)
 
 ## Basic Information
 
