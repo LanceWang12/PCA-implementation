@@ -10,7 +10,63 @@
 template <typename T>
 bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
                             Matrix<T> &eigenVect, vector<T> &eigenValue,
-                            unsigned int verbose = 0) {
+                            unsigned int verbose = 0);
+
+class PCA {
+  // protected:
+private:
+  int n_components;
+  string svd_solver;
+  int n_iter;
+  double precision;
+  unsigned int verbose;
+
+  // store the principal component: v_reduct(n * n_components)
+  Matrix<double> v_reduct;
+
+public:
+  // -------- five of rules --------
+  PCA()
+      : n_components(2), svd_solver("Jakobi"), n_iter(1e8), precision(1e-8),
+        verbose(0) {}
+  PCA(int N_Components, string SVD_Solver, int N_Iter, double Precision,
+      unsigned int Verbose)
+      : n_components(N_Components), svd_solver(SVD_Solver), n_iter(N_Iter),
+        precision(Precision), verbose(Verbose) {}
+
+  // -------- functions --------
+  PCA fit(Matrix<double> x);
+  Matrix<double> transform(Matrix<double> x);
+};
+
+PCA PCA::fit(Matrix<double> x) {
+  assert(n_components < (int)x.cols());
+  // get the eigen value and vactor about x^T * x (feature_dim x feature_dim)
+  Matrix<double> x_t = x.transpose();
+  Matrix<double> a = x_t * x;
+  Matrix<double> eigenVect;
+  vector<double> eigenVal;
+  get_eigenval_by_Jacobi(a, this->precision, this->n_iter, eigenVect, eigenVal,
+                         this->verbose);
+  size_t n = eigenVect.rows(), k = (size_t)n_components;
+  this->v_reduct.resize(n, k);
+  for (size_t i = 0; i < n; i++)
+    for (size_t j = 0; j < k; j++)
+      this->v_reduct(i, j) = eigenVect(i, j);
+  return *this;
+}
+
+Matrix<double> PCA::transform(Matrix<double> x) {
+  assert(this->v_reduct.rows() == x.cols());
+  Matrix<double> result(x.rows(), this->n_components);
+  result = x * this->v_reduct;
+  return result;
+}
+
+template <typename T>
+bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
+                            Matrix<T> &eigenVect, vector<T> &eigenValue,
+                            unsigned int verbose) {
   assert(a.rows() == a.cols());
   size_t dim = a.rows();
   eigenVect.resize(dim, dim);
@@ -130,54 +186,4 @@ bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
 template <typename T> bool pca(const Matrix<T> &X, Matrix<T> &X_reduced) {
 
   return true;
-}
-
-class PCA {
-private:
-  int n_components;
-  string svd_solver;
-  int n_iter;
-  double precision;
-  unsigned int verbose;
-
-  // store the principal component: v_reduct(n * n_components)
-  Matrix<double> v_reduct;
-
-public:
-  // -------- five of rules --------
-  PCA()
-      : n_components(2), svd_solver("Jakobi"), n_iter(1e8), precision(1e-8),
-        verbose(0) {}
-  PCA(int N_Components, string SVD_Solver, int N_Iter, double Precision,
-      unsigned int Verbose)
-      : n_components(N_Components), svd_solver(SVD_Solver), n_iter(N_Iter),
-        precision(Precision), verbose(Verbose) {}
-
-  // -------- functions --------
-  PCA fit(Matrix<double> x);
-  Matrix<double> transform(Matrix<double> x);
-};
-
-PCA PCA::fit(Matrix<double> x) {
-  assert(n_components < (int)x.cols());
-  // get the eigen value and vactor about x^T * x (feature_dim x feature_dim)
-  Matrix<double> x_t = x.transpose();
-  Matrix<double> a = x_t * x;
-  Matrix<double> eigenVect;
-  vector<double> eigenVal;
-  get_eigenval_by_Jacobi(a, this->precision, this->n_iter, eigenVect, eigenVal,
-                         this->verbose);
-  size_t n = eigenVect.rows(), k = (size_t)n_components;
-  this->v_reduct.resize(n, k);
-  for (size_t i = 0; i < n; i++)
-    for (size_t j = 0; j < k; j++)
-      this->v_reduct(i, j) = eigenVect(i, j);
-  return *this;
-}
-
-Matrix<double> PCA::transform(Matrix<double> x) {
-  assert(this->v_reduct.rows() == x.cols());
-  Matrix<double> result(x.rows(), this->n_components);
-  result = x * this->v_reduct;
-  return result;
 }
