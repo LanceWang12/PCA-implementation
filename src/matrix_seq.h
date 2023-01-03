@@ -3,11 +3,12 @@
 #include <iomanip>
 #include <iostream>
 #include <mkl.h>
+#include <omp.h>
 #include <utility>
 #include <vector>
-
 using namespace std;
 
+namespace seq {
 template <typename T> class Matrix {
 private:
   size_t m_rows, m_cols;
@@ -133,7 +134,6 @@ public:
   // ------- Linear algebra --------
   Matrix<T> transpose() {
     Matrix<T> m_t(this->m_cols, this->m_rows);
-#pragma omp parallel for collapse(2)
     for (size_t row = 0; row < this->m_cols; row++) {
       for (size_t col = 0; col < this->m_rows; col++)
         m_t(row, col) = this->operator()(col, row);
@@ -141,3 +141,5 @@ public:
     return m_t;
   }
 };
+
+} // namespace seq

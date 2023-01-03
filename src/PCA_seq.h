@@ -1,15 +1,17 @@
 #pragma once
-#include "matrix.h"
+#include "matrix_seq.h"
 #include <assert.h>
 #include <cmath>
 #include <cstdio>
 #include <float.h>
 #include <map>
+#include <omp.h>
 // #include <Eigen/Dense>
 
+namespace seq {
 template <typename T>
-bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
-                            Matrix<T> &eigenVect, vector<T> &eigenValue,
+bool get_eigenval_by_Jacobi(seq::Matrix<T> a, double precision, int n_iter,
+                            seq::Matrix<T> &eigenVect, vector<T> &eigenValue,
                             int verbose = 0);
 
 class PCA {
@@ -23,32 +25,33 @@ private:
   int verbose;
 
   // store the principal component: v_reduct(n * n_components)
-  Matrix<double> v_reduct;
+  seq::Matrix<double> v_reduct;
 
 public:
   // -------- five of rules --------
   PCA()
       : n_components(2), svd_solver("Jakobi"), n_iter(1e8), precision(1e-8),
-        n_jobs(0), verbose(0) {}
+        n_jobs(1), verbose(0) {}
   PCA(int N_Components, string SVD_Solver, int N_Iter, double Precision,
       int N_Jobs, int Verbose)
       : n_components(N_Components), svd_solver(SVD_Solver), n_iter(N_Iter),
         precision(Precision), n_jobs(N_Jobs), verbose(Verbose) {}
 
   // -------- functions --------
-  PCA fit(Matrix<double> x);
-  Matrix<double> transform(Matrix<double> x);
+  PCA fit(seq::Matrix<double> x);
+  seq::Matrix<double> transform(seq::Matrix<double> x);
 };
+} // namespace seq
 
-PCA PCA::fit(Matrix<double> x) {
+seq::PCA seq::PCA::fit(seq::Matrix<double> x) {
   assert(n_components < (int)x.cols());
   // get the eigen value and vactor about x^T * x (feature_dim x feature_dim)
-  Matrix<double> x_t = x.transpose();
-  Matrix<double> a = x_t * x;
-  Matrix<double> eigenVect;
+  seq::Matrix<double> x_t = x.transpose();
+  seq::Matrix<double> a = x_t * x;
+  seq::Matrix<double> eigenVect;
   vector<double> eigenVal;
-  get_eigenval_by_Jacobi(a, this->precision, this->n_iter, eigenVect, eigenVal,
-                         this->verbose);
+  seq::get_eigenval_by_Jacobi(a, this->precision, this->n_iter, eigenVect,
+                              eigenVal, this->verbose);
   size_t n = eigenVect.rows(), k = (size_t)n_components;
   this->v_reduct.resize(n, k);
   for (size_t i = 0; i < n; i++)
@@ -57,24 +60,23 @@ PCA PCA::fit(Matrix<double> x) {
   return *this;
 }
 
-Matrix<double> PCA::transform(Matrix<double> x) {
+seq::Matrix<double> seq::PCA::transform(seq::Matrix<double> x) {
   assert(this->v_reduct.rows() == x.cols());
-  Matrix<double> result(x.rows(), this->n_components);
+  seq::Matrix<double> result(x.rows(), this->n_components);
   result = x * this->v_reduct;
   return result;
 }
 
 template <typename T>
-bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
-                            Matrix<T> &eigenVect, vector<T> &eigenValue,
-                            int verbose) {
+bool seq::get_eigenval_by_Jacobi(seq::Matrix<T> a, double precision, int n_iter,
+                                 seq::Matrix<T> &eigenVect,
+                                 vector<T> &eigenValue, int verbose) {
   assert(a.rows() == a.cols());
   size_t dim = a.rows();
   eigenVect.resize(dim, dim);
   eigenValue.resize(dim);
 
   // produce I matrix
-#pragma omp parallel for collapse(1)
   for (size_t i = 0; i < dim; i++)
     eigenVect(i, i) = 1.;
 
@@ -94,7 +96,6 @@ bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
     }
     nRow = 0;
     nCol = 1;
-
     for (size_t i = 0; i < dim; i++)
       for (size_t j = 0; j < dim; j++) {
         tmp = fabs(a(i, j));
@@ -130,14 +131,13 @@ bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
     a(nRow, nCol) = 0.5 * (dbAqq - dbApp) * dbSin2 + dbApq * dbCos2;
     a(nCol, nRow) = a(nRow, nCol);
     // cout << "error msg 3" << endl; // error msg
-    // #pragma omp parallel for collapse(1)
     for (size_t i = 0; i < dim; i++)
       if (i != nCol && i != nRow) {
         maxElement = a(i, nRow);
         a(i, nRow) = a(i, nCol) * dbSin + maxElement * dbCos;
         a(i, nCol) = a(i, nCol) * dbCos - maxElement * dbSin;
       }
-    // #pragma omp parallel for collapse(1)
+
     for (size_t j = 0; j < dim; j++)
       if (j != nCol && j != nRow) {
         maxElement = a(nRow, j);
@@ -146,7 +146,6 @@ bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
       }
 
     // compute eigen vector
-    // #pragma omp parallel for collapse(1)
     for (size_t i = 0; i < dim; i++) {
       maxElement = eigenVect(i, nRow);
       eigenVect(i, nRow) = eigenVect(i, nCol) * dbSin + maxElement * dbCos;
@@ -161,7 +160,7 @@ bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
     mapEigen[eigenValue[i]] = i;
   }
 
-  Matrix<T> tmpVec(dim, dim);
+  seq::Matrix<T> tmpVec(dim, dim);
   auto iter = mapEigen.rbegin();
   for (size_t j = 0; iter != mapEigen.rend(), j < dim; j++, iter++) {
     for (size_t i = 0; i < dim; i++)
@@ -173,7 +172,6 @@ bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
   double sumVec = 0;
   for (size_t i = 0; i < dim; i++) {
     sumVec = 0;
-    // #pragma omp parallel for reduction(+sumVec)
     for (size_t j = 0; j < dim; j++)
       sumVec += tmpVec(j, i);
     if (sumVec < 0)
@@ -185,11 +183,6 @@ bool get_eigenval_by_Jacobi(Matrix<T> a, double precision, int n_iter,
   if (verbose > 0) {
     cout << "Jacobi success!!!" << endl;
   }
-
-  return true;
-}
-
-template <typename T> bool pca(const Matrix<T> &X, Matrix<T> &X_reduced) {
 
   return true;
 }

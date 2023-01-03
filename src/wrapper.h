@@ -19,8 +19,8 @@ class np_PCA : public PCA {
 public:
   // five of rules
   np_PCA(int n_components, string svd_solver, int n_iter, double precision,
-         unsigned int verbose)
-      : PCA(n_components, svd_solver, n_iter, precision, verbose) {}
+         int n_jobs, int verbose)
+      : PCA(n_components, svd_solver, n_iter, precision, n_jobs, verbose) {}
 
   // wrapper
   np_PCA fit(py::array_t<double> x);
