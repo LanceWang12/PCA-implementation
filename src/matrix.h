@@ -106,7 +106,8 @@ public:
     assert(this->m_cols == m2.m_rows);
 
     Matrix<T> m3(this->m_rows, m2.m_cols);
-
+    // mkl_set_num_threads(8);
+    // cout << mkl_get_max_threads() << endl;
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, this->m_rows,
                 m2.m_cols, this->m_cols, 1, this->data(), this->m_cols,
                 m2.data(), m2.m_cols, 0, m3.data(), m3.m_cols);
@@ -130,6 +131,26 @@ public:
   //             }
   //           }
   //         }
+  //       }
+  //     }
+  //   }
+
+  //   return m3;
+  // }
+
+  // Matrix<T> operator*(const Matrix<T> &m2) {
+  //   assert(this->m_cols == m2.m_rows);
+
+  //   Matrix<T> m3(this->rows(), m2.cols());
+
+  //   size_t rows = this->rows();
+  //   size_t cols = m2.cols();
+  //   size_t inners = this->cols();
+
+  //   for (size_t row = 0; row < rows; row++) {
+  //     for (size_t col = 0; col < cols; col++) {
+  //       for (size_t inner = 0; inner < inners; inner++) {
+  //         m3(row, col) += this->operator()(row, inner) * m2(inner, col);
   //       }
   //     }
   //   }
