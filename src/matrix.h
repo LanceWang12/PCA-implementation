@@ -114,6 +114,29 @@ public:
     return m3;
   }
 
+  // Matrix<T> operator*(const Matrix<T> &m2) {
+  //   assert(this->cols() == m2.rows());
+
+  //   Matrix<T> m3(this->rows(), m2.cols());
+  //   int size = 64;
+  //   for (size_t row = 0; row < this->rows(); row += size) {
+  //     for (size_t col = 0; col < m2.cols(); col += size) {
+  //       for (size_t inner = 0; inner < this->cols(); inner += size) {
+  //         // tile
+  //         for (size_t k = inner; k < min(this->cols(), inner + size); k++) {
+  //           for (size_t i = row; i < min(this->rows(), row + size); i++) {
+  //             for (size_t j = col; j < min(m2.cols(), col + size); j++) {
+  //               m3(i, j) += this->operator()(i, k) * m2(k, j);
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   return m3;
+  // }
+
   // -------- Other functions --------
   constexpr size_t rows() const { return this->m_rows; }
 
