@@ -1,10 +1,10 @@
-# t-SNE implementation
+# PCA implementation
 
 This is a homework project for [Numerical Software Development(NYCU 2022 autumn)](https://yyc.solvcon.net/en/latest/nsd/schedule/22au_nycu/schedule.html)
 
 ## Basic Information
 
-t-SNE (t-distributed stochastic neighbor embedding) is an dimension reduction algorithm.  It can be used in visualizing high dimension  data and feature reduction.  **By the way, I will compare my implementation with sklearn.**
+PCA (Principal Component Analysis) is an dimension reduction algorithm.  It can be used in visualizing high dimension  data and feature reduction.  **By the way, I will compare my implementation with sklearn.**
 
 - github repository: 
 
@@ -16,7 +16,7 @@ In the Big Data analysis, data is not only becoming bigger and bigger; but also 
 
 Computer has no problem processing that many dimensions.  However, we are limited to three dimensions.  Computer still needs us, so we should find a way to effectively visualize high-dimensional data before handing it over to the computer.
 
-There are many methods to solve this problem.  For example, PCA, LDA, Kernel method, Random projection and so on.  t-SNE uses Gaussian distribution to approximate high dimentionality and uses t distribution to approximate low dimentionality.  It uses KL-divergency to compute similarity and uses gradient discent to get the optima.
+There are many methods to solve this problem.  For example, PCA, LDA, Kernel method, Random projection and so on.  Today, I will implement PCA to solve the problem about dimension reduction.
 
 ![](https://i.imgur.com/cBQO9oV.gif)
 
@@ -39,31 +39,18 @@ int x[10][3] = [
   [4, 5, 6],
   ...
 ]
-tSNE(
+PCA(
   int n_components=2, 
-  double perplexity=30.0,
-  double dearly_exaggeration=12.0,
-  int learning_rate=200,
-  int n_iter=1000,
-  int n_iter_without_progress=300,
-  double min_grad_norm=1e-07,
-  string metric="euclidean",
-  string init="random",
-  bool verbose=0,
-  int random_state=NULL,
-  string method="barnes_hut",
-  double angle=0.5,
   int n_jobs=NULL,
 )
   
-X_embed = tSNE().fit_transform(X)
+X_embed = PCA().fit_transform(X)
 // X_embed = [
 //  [0.1, 0.2],
 //  [0.3, 0.4],
 //  ...
 // ]
 ```
-
 
 
 ## Engineering Infrastructure
@@ -97,6 +84,6 @@ Week 8 (12/19): Make slides and prepare for the presentation
 
 ## References
 
-https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html
+https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
 
 https://github.com/pybind/pybind11
